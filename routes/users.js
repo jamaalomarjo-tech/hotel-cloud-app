@@ -6,15 +6,18 @@ var userService = new UserService(db);
 var { canSeeUserList, canSeeUserDetails, checkIfAuthorized, isAdmin } = require("./authMiddlewares")
 var bodyParser = require('body-parser')
 var jsonParser = bodyParser.json()
-
+var cache = require('../middleware/caching.js')
+var client = require('../redis.js');
 /* GET users listing. */
-router.get('/', canSeeUserList, async function(req, res, next) {
+router.get('/', canSeeUserList, cache, async function(req, res, next) {
   const users = await userService.getAll();
+  await client.set(req.originalUrl, JSON.stringify(users));
   res.render('users', {users: users});
 });
 
-router.get('/:userId', canSeeUserDetails, async function(req, res, next) {
+router.get('/:userId', canSeeUserDetails, cache, async function(req, res, next) {
   const user = await userService.getOne(req.params.userId);
+  await client.set(req.originalUrl, JSON.stringify(user));
   const username = req.user ? req.user.username : null;
   res.render('userDetails', { user: user, username: username });
 });

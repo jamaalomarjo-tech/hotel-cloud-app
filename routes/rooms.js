@@ -1,22 +1,26 @@
 var express = require('express');
 var router = express.Router();
 var bodyParser = require('body-parser')
+var cache = require('../middleware/caching.js')
+var client = require('../redis.js');
 var jsonParser = bodyParser.json()
 var RoomService = require("../services/RoomService")
 var db = require("../models");
 var roomService = new RoomService(db);
 var { checkIfAuthorized } = require("./authMiddlewares")
 /* GET rooms listing. */
-router.get('/:hotelId', async function(req, res, next) {
+router.get('/:hotelId', cache, async function(req, res, next) {
   const rooms =  await roomService.getHotelRooms(req.params.hotelId);
+  await client.set(req.originalUrl, JSON.stringify(rooms));
   const userId = req.user?.id ?? 0;
   const isAdmin = req.user?.role === "Admin";
   const username = req.user?.username ?? 0;
   res.render('rooms', { rooms: rooms, userId, username, isAdmin });
 });
 
-router.get('/', async function(req, res, next) {
+router.get('/', cache, async function (req, res, next) {
     const rooms = await roomService.get();
+    await client.set(req.originalUrl, JSON.stringify(rooms));
     const userId = req.user?.id ?? 0;
     const username = req.user?.username ?? 0;
     const isAdmin = req.user?.role === "Admin";

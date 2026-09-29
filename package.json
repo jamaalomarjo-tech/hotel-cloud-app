@@ -19,6 +19,7 @@
     "mysql2": "^3.10.3",
     "passport": "^0.6.0",
     "passport-local": "^1.0.0",
+    "redis": "^6.2.1",
     "sequelize": "^6.27.0",
     "sqlite3": "^5.0.2"
   }

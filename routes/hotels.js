@@ -6,18 +6,21 @@ var HotelService = require("../services/HotelService")
 var db = require("../models");
 var hotelService = new HotelService(db);
 var { checkIfAuthorized, isAdmin } = require("./authMiddlewares")
-
+var cache = require('../middleware/caching.js')
+var client = require('../redis.js');
 /* GET hotels listing. */
-router.get('/', async function(req, res, next) {
+router.get('/', cache, async function (req, res, next) {
   const hotels = await hotelService.get();
+  await client.set(req.originalUrl, JSON.stringify(hotels));
   const username = req.user?.username ?? 0;
   res.render('hotels', { hotels: hotels, user: req.user, username });
 });
 
-router.get('/:hotelId', async function(req, res, next) {
+router.get('/:hotelId', cache, async function(req, res, next) {
   const userId = req.user?.id ?? 0;
   const username = req.user?.username ?? 0;
   const hotel = await hotelService.getHotelDetails(req.params.hotelId, userId);
+  await client.set(req.originalUrl, JSON.stringify(hotel));
   console.log(hotel);
   res.render('hotelDetails', { hotel: hotel, userId, user: req.user, username });
 });
