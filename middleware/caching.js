@@ -17,7 +17,13 @@ async function cache(req, res, next) {
                 username: req.user ? req.user.username : null
             });
         }
-
+if (req.originalUrl === '/hotels') {
+    return res.render('hotels', {
+        hotels: JSON.parse(data),
+        user: req.user,
+        username: req.user ? req.user.username : null
+    });
+}
         if (req.originalUrl.startsWith('/hotels/')) {
             const hotel = JSON.parse(data);
             const userId = req.user?.id ?? 0;
